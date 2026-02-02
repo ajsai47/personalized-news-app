@@ -1,9 +1,16 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { NewsCard, SectionHeader, getRelevance } from "@/components/NewsCard"
+import { NewsEntry, getRelevance } from "@/components/NewsEntry"
+import { ScrollContainer } from "@/components/ScrollContainer"
 import { TopNav } from "@/components/TopNav"
 import { DaVinciSketches } from "@/components/DaVinciSketches"
+
+interface StructuredContent {
+  news: string | null
+  details: string | null
+  whyItMatters: string | null
+}
 
 interface Segment {
   id: string
@@ -11,6 +18,7 @@ interface Segment {
   title: string
   originalContent: string
   personalizedContent?: string
+  structuredContent?: StructuredContent | null
   topics: string[]
   companies: string[]
   publishedAt?: string
@@ -46,6 +54,7 @@ export function FeedContent({
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
   const [relevanceFilter, setRelevanceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Get all unique tags from segments
   const allTags = useMemo(() => {
@@ -77,16 +86,18 @@ export function FeedContent({
         const segRelevance = getRelevance(seg)
         if (segRelevance !== relevanceFilter) return false
       }
+      // Search filter - check title and content
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        const titleMatch = seg.title.toLowerCase().includes(query)
+        const contentMatch = seg.originalContent.toLowerCase().includes(query)
+        const topicsMatch = seg.topics.some(t => t.toLowerCase().includes(query))
+        const companiesMatch = (seg.companies || []).some(c => c.toLowerCase().includes(query))
+        if (!titleMatch && !contentMatch && !topicsMatch && !companiesMatch) return false
+      }
       return true
     })
-  }, [segments, typeFilter, selectedTags, selectedCompanies, relevanceFilter])
-
-  // Group filtered segments by type
-  const chronicles = filteredSegments.filter(s => s.type === 'main_news')
-  const inventions = filteredSegments.filter(s => s.type === 'top_tools')
-  const dispatches = filteredSegments.filter(s => s.type === 'quick_news')
-
-  const showUnifiedView = typeFilter !== 'all'
+  }, [segments, typeFilter, selectedTags, selectedCompanies, relevanceFilter, searchQuery])
 
   return (
     <>
@@ -110,71 +121,60 @@ export function FeedContent({
         onRelevanceChange={setRelevanceFilter}
         typeFilter={typeFilter}
         onTypeChange={setTypeFilter}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
-      {/* Content Area */}
-      <div className="relative z-10 max-w-3xl mx-auto px-6 py-8">
+      {/* Scroll Container with Content */}
+      <div className="relative z-10 px-4 py-8">
         {filteredSegments.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-6 opacity-40">🔍</div>
-            <h2 className="font-handwritten text-2xl mb-3" style={{ color: 'var(--ink)' }}>
-              No entries match thy criteria
-            </h2>
-            <p className="font-serif italic mb-6" style={{ color: 'var(--ink-light)' }}>
-              Perhaps broaden thy search, dear scholar
-            </p>
-            <button
-              onClick={() => {
-                setSelectedTags([])
-                setSelectedCompanies([])
-                setRelevanceFilter('all')
-                setTypeFilter('all')
-              }}
-              className="stamp-button text-sm"
-            >
-              Clear all filters
-            </button>
-          </div>
-        ) : showUnifiedView ? (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-handwritten text-xl" style={{ color: 'var(--ink)' }}>
-                {filteredSegments.length} {filteredSegments.length === 1 ? 'entry' : 'entries'} found
+          <ScrollContainer>
+            <div className="text-center py-16">
+              <div className="text-5xl mb-6 opacity-40">🔍</div>
+              <h2 className="font-handwritten text-2xl mb-3" style={{ color: 'var(--ink)' }}>
+                No entries match thy criteria
               </h2>
+              <p className="font-serif italic mb-6" style={{ color: 'var(--ink-light)' }}>
+                Perhaps broaden thy search, dear scholar
+              </p>
+              <button
+                onClick={() => {
+                  setSelectedTags([])
+                  setSelectedCompanies([])
+                  setRelevanceFilter('all')
+                  setTypeFilter('all')
+                  setSearchQuery('')
+                }}
+                className="stamp-button text-sm"
+              >
+                Clear all filters
+              </button>
             </div>
-            {filteredSegments.map((seg, i) => (
-              <NewsCard key={seg.id} segment={seg} index={i} />
-            ))}
-          </div>
+          </ScrollContainer>
         ) : (
-          <div>
-            {chronicles.length > 0 && (
-              <section>
-                <SectionHeader title="Chronicles" icon="📜" count={chronicles.length} />
-                {chronicles.map((seg, i) => (
-                  <NewsCard key={seg.id} segment={seg} index={i} />
-                ))}
-              </section>
-            )}
+          <ScrollContainer>
+            {/* Header inside scroll */}
+            <div className="text-center mb-8">
+              <h1 className="font-handwritten text-3xl mb-2" style={{ color: 'var(--ink)' }}>
+                Observations on Artificial Minds
+              </h1>
+              <p className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
+                {filteredSegments.length} {filteredSegments.length === 1 ? 'entry' : 'entries'} in this volume
+              </p>
+            </div>
 
-            {inventions.length > 0 && (
-              <section>
-                <SectionHeader title="Inventions" icon="⚙️" count={inventions.length} />
-                {inventions.map((seg, i) => (
-                  <NewsCard key={seg.id} segment={seg} index={i} />
-                ))}
-              </section>
-            )}
+            {/* All entries flow together */}
+            {filteredSegments.map((seg, i) => (
+              <NewsEntry key={seg.id} segment={seg} index={i} />
+            ))}
 
-            {dispatches.length > 0 && (
-              <section>
-                <SectionHeader title="Dispatches" icon="⚡" count={dispatches.length} />
-                {dispatches.map((seg, i) => (
-                  <NewsCard key={seg.id} segment={seg} index={i} />
-                ))}
-              </section>
-            )}
-          </div>
+            {/* Footer flourish */}
+            <div className="text-center mt-8 pt-4">
+              <p className="font-annotation text-sm italic" style={{ color: 'var(--ink-faded)' }}>
+                — Finis —
+              </p>
+            </div>
+          </ScrollContainer>
         )}
       </div>
     </>

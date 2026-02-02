@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 
 interface TopNavProps {
@@ -20,6 +20,100 @@ interface TopNavProps {
   onRelevanceChange: (relevance: 'all' | 'high' | 'medium' | 'low') => void
   typeFilter: string
   onTypeChange: (type: string) => void
+  // Search props
+  searchQuery: string
+  onSearchChange: (query: string) => void
+}
+
+// Dropdown component for filters
+function FilterDropdown({
+  label,
+  value,
+  options,
+  onChange,
+  multiple = false,
+  selectedItems = [],
+  onToggleItem
+}: {
+  label: string
+  value?: string
+  options: { value: string; label: string }[]
+  onChange?: (value: string) => void
+  multiple?: boolean
+  selectedItems?: string[]
+  onToggleItem?: (item: string) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const displayValue = multiple
+    ? (selectedItems.length > 0 ? `${selectedItems.length} selected` : label)
+    : (options.find(o => o.value === value)?.label || label)
+
+  const hasSelection = multiple ? selectedItems.length > 0 : value !== 'all'
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-typewriter border transition-colors ${
+          hasSelection
+            ? 'border-[var(--sepia)] text-[var(--sepia)]'
+            : 'border-[var(--ink-faded)] text-[var(--ink-faded)] hover:text-[var(--ink)] hover:border-[var(--ink)]'
+        }`}
+      >
+        <span>{displayValue}</span>
+        <span className="text-[10px]">{isOpen ? '▴' : '▾'}</span>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute top-full left-0 mt-1 min-w-[140px] max-h-[250px] overflow-y-auto border border-[var(--ink-faded)] shadow-lg z-50"
+          style={{ background: 'var(--parchment)' }}
+        >
+          {multiple ? (
+            options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => onToggleItem?.(opt.value)}
+                className={`w-full px-3 py-2 text-left text-xs font-typewriter flex items-center gap-2 hover:bg-[var(--parchment-dark)] ${
+                  selectedItems.includes(opt.value) ? 'text-[var(--sepia)]' : 'text-[var(--ink-light)]'
+                }`}
+              >
+                <span className="w-3">{selectedItems.includes(opt.value) ? '✓' : ''}</span>
+                {opt.label}
+              </button>
+            ))
+          ) : (
+            options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  onChange?.(opt.value)
+                  setIsOpen(false)
+                }}
+                className={`w-full px-3 py-2 text-left text-xs font-typewriter hover:bg-[var(--parchment-dark)] ${
+                  value === opt.value ? 'text-[var(--sepia)] bg-[var(--parchment-light)]' : 'text-[var(--ink-light)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function TopNav({
@@ -37,12 +131,10 @@ export function TopNav({
   relevanceFilter,
   onRelevanceChange,
   typeFilter,
-  onTypeChange
+  onTypeChange,
+  searchQuery,
+  onSearchChange
 }: TopNavProps) {
-  const [showFilters, setShowFilters] = useState(false)
-  const [showTags, setShowTags] = useState(false)
-  const [showCompanies, setShowCompanies] = useState(false)
-
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
       onTagsChange(selectedTags.filter(t => t !== tag))
@@ -60,253 +152,131 @@ export function TopNav({
   }
 
   const typeOptions = [
-    { value: 'all', label: 'All' },
+    { value: 'all', label: 'All Types' },
     { value: 'main_news', label: 'Chronicles' },
     { value: 'top_tools', label: 'Inventions' },
     { value: 'quick_news', label: 'Dispatches' }
   ]
 
   const relevanceOptions = [
-    { value: 'all', label: 'All' },
+    { value: 'all', label: 'All Importance' },
     { value: 'high', label: 'Important' },
     { value: 'medium', label: 'Notable' },
     { value: 'low', label: 'Brief' }
   ]
 
-  const hasActiveFilters = typeFilter !== 'all' || relevanceFilter !== 'all' || selectedTags.length > 0 || selectedCompanies.length > 0
+  const tagOptions = allTags.map(t => ({ value: t, label: t }))
+  const companyOptions = allCompanies.map(c => ({ value: c, label: c }))
+
+  const hasActiveFilters = typeFilter !== 'all' || relevanceFilter !== 'all' || selectedTags.length > 0 || selectedCompanies.length > 0 || searchQuery.length > 0
 
   return (
     <nav className="sticky top-0 z-50" style={{ background: 'var(--parchment)', borderBottom: '1px solid rgba(139, 115, 85, 0.3)' }}>
-      {/* Main Nav Bar */}
       <div className="max-w-4xl mx-auto px-6">
-        <div className="flex items-center justify-between h-14">
-          {/* Left - Logo */}
-          <div className="flex items-center gap-3">
+        {/* Top Row - Logo, Search, Settings */}
+        <div className="flex items-center gap-4 h-14">
+          {/* Logo */}
+          <Link href="/feed" className="flex items-center gap-2 flex-shrink-0">
             <span className="font-handwritten text-2xl" style={{ color: 'var(--ink)' }}>
               AG+
             </span>
             <span className="hidden sm:block text-xs font-typewriter" style={{ color: 'var(--ink-faded)' }}>
               Notebook
             </span>
-          </div>
+          </Link>
 
-          {/* Center - Quick Stats */}
-          <div className="hidden md:flex items-center gap-4 font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
-            <span>{storyCount} entries</span>
-            <span style={{ color: 'var(--vermillion)' }}>✦ {importantCount} important</span>
-          </div>
-
-          {/* Right - Actions */}
-          <div className="flex items-center gap-2">
-            {/* Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-typewriter transition-colors ${
-                showFilters || hasActiveFilters
-                  ? 'text-[var(--sepia)] border-[var(--sepia)]'
-                  : 'text-[var(--ink-faded)] border-[var(--ink-faded)]'
-              } border hover:text-[var(--ink)]`}
-            >
-              <span>⚙</span>
-              <span className="hidden sm:inline">Filters</span>
-              {hasActiveFilters && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--vermillion)]" />
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Search entries..."
+                className="w-full px-4 py-2 text-sm font-serif border border-[var(--ink-faded)] bg-transparent focus:outline-none focus:border-[var(--sepia)] transition-colors"
+                style={{ color: 'var(--ink)', background: 'var(--parchment-light)' }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs"
+                  style={{ color: 'var(--ink-faded)' }}
+                >
+                  ✕
+                </button>
               )}
-            </button>
+            </div>
+          </div>
 
-            {/* Settings */}
+          {/* Stats & Settings */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-3 font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
+              <span>{storyCount} entries</span>
+              <span style={{ color: 'var(--vermillion)' }}>✦ {importantCount}</span>
+            </div>
             <Link
               href="/settings"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-typewriter border border-[var(--ink-faded)] hover:border-[var(--ink)] transition-colors"
+              className="p-2 text-sm border border-[var(--ink-faded)] hover:border-[var(--ink)] transition-colors"
               style={{ color: 'var(--ink-faded)' }}
             >
-              <span>☰</span>
-              <span className="hidden sm:inline">Prefs</span>
+              ☰
             </Link>
           </div>
         </div>
 
-        {/* Greeting line */}
-        <div className="flex items-center justify-between pb-3 -mt-1">
-          <p className="font-serif text-sm" style={{ color: 'var(--ink-light)' }}>
+        {/* Bottom Row - Greeting and Filters */}
+        <div className="flex items-center justify-between gap-4 pb-3">
+          {/* Greeting */}
+          <p className="font-serif text-sm flex-shrink-0" style={{ color: 'var(--ink-light)' }}>
             {greeting}, {roleLabel} · <span className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>{dateStr}</span>
           </p>
-        </div>
-      </div>
 
-      {/* Expanded Filters Panel */}
-      {showFilters && (
-        <div className="border-t border-[var(--ink-faded)]/20" style={{ background: 'var(--parchment-light)' }}>
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex flex-wrap items-center gap-6">
-              {/* Type Filter */}
-              <div className="flex items-center gap-2">
-                <span className="font-annotation text-xs" style={{ color: 'var(--ink-faded)' }}>Type:</span>
-                <div className="flex gap-1">
-                  {typeOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => onTypeChange(opt.value)}
-                      className={`px-2 py-1 text-xs font-typewriter transition-all ${
-                        typeFilter === opt.value
-                          ? 'bg-[var(--sepia)] text-[var(--parchment)]'
-                          : 'text-[var(--ink-faded)] hover:text-[var(--ink)]'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-6" style={{ background: 'var(--ink-faded)', opacity: 0.3 }} />
-
-              {/* Relevance Filter */}
-              <div className="flex items-center gap-2">
-                <span className="font-annotation text-xs" style={{ color: 'var(--ink-faded)' }}>Import:</span>
-                <div className="flex gap-1">
-                  {relevanceOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => onRelevanceChange(opt.value as 'all' | 'high' | 'medium' | 'low')}
-                      className={`px-2 py-1 text-xs font-typewriter transition-all ${
-                        relevanceFilter === opt.value
-                          ? 'bg-[var(--sepia)] text-[var(--parchment)]'
-                          : 'text-[var(--ink-faded)] hover:text-[var(--ink)]'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-6" style={{ background: 'var(--ink-faded)', opacity: 0.3 }} />
-
-              {/* Tags */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowTags(!showTags)}
-                  className="flex items-center gap-1 font-annotation text-xs hover:underline"
-                  style={{ color: 'var(--ink-faded)' }}
-                >
-                  Subjects {showTags ? '▴' : '▾'}
-                </button>
-                {selectedTags.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {selectedTags.slice(0, 2).map(tag => (
-                      <span
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
-                        className="px-1.5 py-0.5 text-xs font-annotation cursor-pointer hover:line-through"
-                        style={{ background: 'var(--parchment-dark)', color: 'var(--ink-light)' }}
-                      >
-                        {tag} ×
-                      </span>
-                    ))}
-                    {selectedTags.length > 2 && (
-                      <span className="text-xs" style={{ color: 'var(--ink-faded)' }}>
-                        +{selectedTags.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-6" style={{ background: 'var(--ink-faded)', opacity: 0.3 }} />
-
-              {/* Companies */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowCompanies(!showCompanies)}
-                  className="flex items-center gap-1 font-annotation text-xs hover:underline"
-                  style={{ color: 'var(--ink-faded)' }}
-                >
-                  Companies {showCompanies ? '▴' : '▾'}
-                </button>
-                {selectedCompanies.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {selectedCompanies.slice(0, 2).map(company => (
-                      <span
-                        key={company}
-                        onClick={() => toggleCompany(company)}
-                        className="px-1.5 py-0.5 text-xs font-annotation cursor-pointer hover:line-through"
-                        style={{ background: 'var(--iron-gall)', color: 'var(--parchment)' }}
-                      >
-                        {company} ×
-                      </span>
-                    ))}
-                    {selectedCompanies.length > 2 && (
-                      <span className="text-xs" style={{ color: 'var(--ink-faded)' }}>
-                        +{selectedCompanies.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Clear All */}
-              {hasActiveFilters && (
-                <button
-                  onClick={() => {
-                    onTypeChange('all')
-                    onRelevanceChange('all')
-                    onTagsChange([])
-                    onCompaniesChange([])
-                  }}
-                  className="font-annotation text-xs italic hover:underline"
-                  style={{ color: 'var(--vermillion)' }}
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-
-            {/* Tags Expansion */}
-            {showTags && (
-              <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-dashed border-[var(--ink-faded)]/20">
-                {allTags.map((tag, i) => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={`px-2 py-0.5 text-xs font-annotation transition-all ${
-                      selectedTags.includes(tag)
-                        ? 'bg-[var(--sepia)] text-[var(--parchment)]'
-                        : 'bg-[var(--parchment-dark)] text-[var(--ink-faded)] hover:text-[var(--ink)]'
-                    }`}
-                    style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Companies Expansion */}
-            {showCompanies && (
-              <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-dashed border-[var(--ink-faded)]/20">
-                {allCompanies.map((company, i) => (
-                  <button
-                    key={company}
-                    onClick={() => toggleCompany(company)}
-                    className={`px-2 py-0.5 text-xs font-annotation transition-all ${
-                      selectedCompanies.includes(company)
-                        ? 'bg-[var(--iron-gall)] text-[var(--parchment)]'
-                        : 'bg-[var(--parchment-dark)] text-[var(--ink-faded)] hover:text-[var(--ink)]'
-                    }`}
-                    style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
-                  >
-                    {company}
-                  </button>
-                ))}
-              </div>
+          {/* Filter Dropdowns */}
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <FilterDropdown
+              label="Type"
+              value={typeFilter}
+              options={typeOptions}
+              onChange={onTypeChange}
+            />
+            <FilterDropdown
+              label="Importance"
+              value={relevanceFilter}
+              options={relevanceOptions}
+              onChange={(v) => onRelevanceChange(v as 'all' | 'high' | 'medium' | 'low')}
+            />
+            <FilterDropdown
+              label="Topics"
+              multiple
+              options={tagOptions}
+              selectedItems={selectedTags}
+              onToggleItem={toggleTag}
+            />
+            <FilterDropdown
+              label="Companies"
+              multiple
+              options={companyOptions}
+              selectedItems={selectedCompanies}
+              onToggleItem={toggleCompany}
+            />
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  onTypeChange('all')
+                  onRelevanceChange('all')
+                  onTagsChange([])
+                  onCompaniesChange([])
+                  onSearchChange('')
+                }}
+                className="px-2 py-1.5 text-xs font-typewriter hover:underline"
+                style={{ color: 'var(--vermillion)' }}
+              >
+                Clear
+              </button>
             )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }

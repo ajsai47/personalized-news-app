@@ -8,6 +8,4 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #276 | 12:46 PM | 🟣 | Initialized shadcn/ui Component Library | ~346 |
-| #273 | 12:34 PM | ✅ | Extended Newsletter Segment Time Window from 2 to 7 Days | ~291 |
-| #238 | 12:09 PM | 🟣 | Implemented Claude AI Content Personalization Engine with Caching | ~481 |
 </claude-mem-context>

@@ -1,12 +1,19 @@
 import { sql } from './db';
 import { getUserPreferences, getPersonalizedContent } from './personalize';
 
+export interface StructuredContent {
+  news: string | null;
+  details: string | null;
+  whyItMatters: string | null;
+}
+
 export interface Segment {
   id: string;
   type: string;
   title: string;
   originalContent: string;
   personalizedContent?: string;
+  structuredContent?: StructuredContent | null;
   topics: string[];
   companies: string[];
   publishedAt: string;
@@ -14,7 +21,7 @@ export interface Segment {
 
 export async function getTodaysSegments(): Promise<Segment[]> {
   const result = await sql`
-    SELECT s.id, s.type, s.title, s.original_content, s.topics, s.companies, n.published_at
+    SELECT s.id, s.type, s.title, s.original_content, s.structured_content, s.topics, s.companies, n.published_at
     FROM segments s
     JOIN newsletters n ON s.newsletter_id = n.id
     WHERE n.published_at > NOW() - INTERVAL '7 days'
@@ -26,6 +33,7 @@ export async function getTodaysSegments(): Promise<Segment[]> {
     type: row.type,
     title: row.title,
     originalContent: row.original_content,
+    structuredContent: row.structured_content || null,
     topics: row.topics || [],
     companies: row.companies || [],
     publishedAt: row.published_at

@@ -640,3 +640,302 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--ink-light);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ILLUMINATED SCROLL CONTAINER
+   ═══════════════════════════════════════════════════════════ */
+
+/* Gold accent for illuminated elements */
+:root {
+  --gold: #C9A227;
+  --gold-light: #E8C547;
+  --gold-dark: #8B7014;
+}
+
+.scroll-container {
+  position: relative;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Top scroll roll - curled parchment edge */
+.scroll-roll-top {
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    var(--parchment-dark) 0%,
+    var(--parchment) 30%,
+    transparent 100%
+  );
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  box-shadow:
+    inset 0 15px 20px -10px rgba(0,0,0,0.15),
+    inset 0 -5px 15px -5px rgba(255,255,255,0.3),
+    0 4px 8px -2px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 2;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.scroll-roll-top::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 5px;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold) 20%,
+    var(--gold-light) 50%,
+    var(--gold) 80%,
+    transparent 100%
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* Bottom scroll roll */
+.scroll-roll-bottom {
+  height: 40px;
+  background: linear-gradient(
+    to top,
+    var(--parchment-dark) 0%,
+    var(--parchment) 30%,
+    transparent 100%
+  );
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  box-shadow:
+    inset 0 -15px 20px -10px rgba(0,0,0,0.15),
+    inset 0 5px 15px -5px rgba(255,255,255,0.3),
+    0 -4px 8px -2px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 2;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.scroll-roll-bottom::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 5px;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold) 20%,
+    var(--gold-light) 50%,
+    var(--gold) 80%,
+    transparent 100%
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* Main scroll frame */
+.scroll-frame {
+  position: relative;
+  background: var(--parchment);
+  background-image:
+    /* Subtle paper texture */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  box-shadow:
+    inset 0 0 60px rgba(139, 112, 20, 0.08),
+    0 0 20px rgba(0,0,0,0.1);
+  border-left: 3px solid var(--gold);
+  border-right: 3px solid var(--gold);
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+/* Left ornate border */
+.scroll-border-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 80px,
+      var(--gold) 80px,
+      var(--gold) 82px,
+      transparent 82px,
+      transparent 100px
+    );
+  opacity: 0.3;
+}
+
+.scroll-border-left::before {
+  content: '❧';
+  position: absolute;
+  top: 20px;
+  left: 5px;
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.6;
+}
+
+.scroll-border-left::after {
+  content: '❧';
+  position: absolute;
+  bottom: 20px;
+  left: 5px;
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.6;
+  transform: rotate(180deg);
+}
+
+/* Right ornate border */
+.scroll-border-right {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 80px,
+      var(--gold) 80px,
+      var(--gold) 82px,
+      transparent 82px,
+      transparent 100px
+    );
+  opacity: 0.3;
+}
+
+.scroll-border-right::before {
+  content: '❧';
+  position: absolute;
+  top: 20px;
+  right: 5px;
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.6;
+  transform: scaleX(-1);
+}
+
+.scroll-border-right::after {
+  content: '❧';
+  position: absolute;
+  bottom: 20px;
+  right: 5px;
+  font-size: 1.5rem;
+  color: var(--gold);
+  opacity: 0.6;
+  transform: scaleX(-1) rotate(180deg);
+}
+
+/* Content area within scroll */
+.scroll-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DROP CAPS (Illuminated first letter)
+   ═══════════════════════════════════════════════════════════ */
+
+.drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-handwritten), 'Times New Roman', serif;
+  font-size: 3.5rem;
+  line-height: 0.8;
+  padding-right: 0.5rem;
+  padding-top: 0.1rem;
+  color: var(--gold-dark);
+  text-shadow: 1px 1px 0 var(--gold-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ORNAMENTAL FLOURISH DIVIDERS
+   ═══════════════════════════════════════════════════════════ */
+
+.flourish-divider {
+  text-align: center;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.flourish-divider::before {
+  content: '— ❦ —';
+  font-family: var(--font-serif);
+  color: var(--gold);
+  font-size: 1.2rem;
+  letter-spacing: 0.5rem;
+}
+
+/* Section label styling */
+.section-label {
+  font-family: var(--font-annotation), cursive;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--gold-dark);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-label::before {
+  content: '✦';
+  font-size: 0.6rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NEWS ENTRY (formerly NewsCard) within scroll
+   ═══════════════════════════════════════════════════════════ */
+
+.news-entry {
+  padding: 1.5rem 0;
+  position: relative;
+}
+
+.news-entry + .news-entry {
+  border-top: none;
+}
+
+/* Importance indicator on left */
+.news-entry.importance-high::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 1.5rem;
+  width: 8px;
+  height: 8px;
+  background: var(--vermillion);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--vermillion);
+}
+
+.news-entry.importance-medium::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 1.5rem;
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+
+.news-entry.importance-low::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 1.5rem;
+  width: 4px;
+  height: 4px;
+  background: var(--ink-faded);
+  border-radius: 50%;
+}

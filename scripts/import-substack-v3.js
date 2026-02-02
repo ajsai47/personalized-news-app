@@ -81,6 +81,81 @@ function extractCompanies(text) {
   return [...new Set(companies)];
 }
 
+// Parse structured content by looking for News/Details/Why It Matters headers
+function parseStructuredContent(html) {
+  // Header patterns (case-insensitive)
+  const newsPatterns = [/\b(the\s+)?news\s*:/i, /^news\b/im];
+  const detailsPatterns = [/\b(the\s+)?details\s*:/i, /^details\b/im];
+  const whyPatterns = [/\bwhy\s+(it\s+)?matters\s*:/i, /^why\s+(it\s+)?matters\b/im];
+
+  const text = cleanHtml(html, true); // preserve links
+
+  // Find positions of each section
+  let newsStart = -1, detailsStart = -1, whyStart = -1;
+  let newsHeaderEnd = 0, detailsHeaderEnd = 0, whyHeaderEnd = 0;
+
+  for (const pattern of newsPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      newsStart = text.indexOf(match[0]);
+      newsHeaderEnd = newsStart + match[0].length;
+      break;
+    }
+  }
+
+  for (const pattern of detailsPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      detailsStart = text.indexOf(match[0]);
+      detailsHeaderEnd = detailsStart + match[0].length;
+      break;
+    }
+  }
+
+  for (const pattern of whyPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      whyStart = text.indexOf(match[0]);
+      whyHeaderEnd = whyStart + match[0].length;
+      break;
+    }
+  }
+
+  // If we don't have at least News and one other section, return null
+  if (newsStart === -1 || (detailsStart === -1 && whyStart === -1)) {
+    return null;
+  }
+
+  // Extract content between sections
+  let news = '', details = '', whyItMatters = '';
+
+  // Sort positions to determine order
+  const sections = [
+    { name: 'news', start: newsStart, headerEnd: newsHeaderEnd },
+    { name: 'details', start: detailsStart, headerEnd: detailsHeaderEnd },
+    { name: 'why', start: whyStart, headerEnd: whyHeaderEnd }
+  ].filter(s => s.start !== -1).sort((a, b) => a.start - b.start);
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
+    const nextStart = i < sections.length - 1 ? sections[i + 1].start : text.length;
+    const content = text.substring(section.headerEnd, nextStart).trim();
+
+    if (section.name === 'news') news = content;
+    else if (section.name === 'details') details = content;
+    else if (section.name === 'why') whyItMatters = content;
+  }
+
+  // Only return if we have meaningful content
+  if (news.length < 10) return null;
+
+  return {
+    news: news || null,
+    details: details || null,
+    whyItMatters: whyItMatters || null
+  };
+}
+
 function extractTopics(text) {
   const topics = [];
   const lower = text.toLowerCase();
@@ -176,12 +251,16 @@ function parseNewsletterContent(content) {
       const cleanTitle = header.title.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]\s*/u, '').trim();
 
       if (plainText.length > 100 && cleanTitle.length > 5) {
+        // Try to parse structured content (News/Details/Why It Matters)
+        const structured = parseStructuredContent(sectionContent);
+
         segments.push({
           title: cleanTitle,
           content: cleanContent,
           type: 'main_news',
           topics: extractTopics(cleanTitle + ' ' + plainText),
-          companies: extractCompanies(cleanTitle + ' ' + plainText)
+          companies: extractCompanies(cleanTitle + ' ' + plainText),
+          structuredContent: structured
         });
       }
     }
@@ -245,12 +324,13 @@ async function main() {
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
       const companies = seg.companies || [];
-      console.log(`     [${seg.type}] ${seg.title.substring(0, 50)}... (${companies.join(', ') || 'no companies'})`);
+      const hasStructured = seg.structuredContent ? '✓' : '✗';
+      console.log(`     [${seg.type}] ${seg.title.substring(0, 50)}... (structured: ${hasStructured})`);
 
       await client.query(
-        `INSERT INTO segments (type, title, original_content, topics, companies, newsletter_id, order_in_newsletter)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [seg.type, seg.title, seg.content, seg.topics, companies, newsletterId, i]
+        `INSERT INTO segments (type, title, original_content, topics, companies, newsletter_id, order_in_newsletter, structured_content)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [seg.type, seg.title, seg.content, seg.topics, companies, newsletterId, i, seg.structuredContent ? JSON.stringify(seg.structuredContent) : null]
       );
 
       totalSegments++;
