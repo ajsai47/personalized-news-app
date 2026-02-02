@@ -70,7 +70,18 @@ const typeLabels: Record<string, string> = {
   quick_news: 'Dispatch'
 }
 
-export function NewsEntry({ segment, index }: { segment: Segment; index: number }) {
+// Highlight search terms in text
+function highlightSearchTerms(text: string, searchQuery: string): string {
+  if (!searchQuery.trim()) return text
+
+  // Escape special regex characters in the search query
+  const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`(${escapedQuery})`, 'gi')
+
+  return text.replace(regex, '<mark class="search-highlight">$1</mark>')
+}
+
+export function NewsEntry({ segment, index, searchQuery = '' }: { segment: Segment; index: number; searchQuery?: string }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const relevance = getRelevance(segment)
   const entryDate = formatEntryDate(segment.publishedAt)
@@ -109,9 +120,8 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
       <h1
         className="entry-title cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {segment.title}
-      </h1>
+        dangerouslySetInnerHTML={{ __html: highlightSearchTerms(segment.title, searchQuery) }}
+      />
 
       {/* Badges below title */}
       <div className="entry-badges">
@@ -134,7 +144,7 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
           className="entry-news drop-cap
             [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
             hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-          dangerouslySetInnerHTML={{ __html: newsContent }}
+          dangerouslySetInnerHTML={{ __html: highlightSearchTerms(newsContent, searchQuery) }}
         />
       </div>
 
@@ -159,7 +169,7 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
                 className="entry-content
                   [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
                   hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-                dangerouslySetInnerHTML={{ __html: detailsContent }}
+                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(detailsContent, searchQuery) }}
               />
             </div>
           )}
@@ -172,7 +182,7 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
                 className="entry-content entry-content-matters
                   [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
                   hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-                dangerouslySetInnerHTML={{ __html: whyItMattersContent }}
+                dangerouslySetInnerHTML={{ __html: highlightSearchTerms(whyItMattersContent, searchQuery) }}
               />
             </div>
           )}

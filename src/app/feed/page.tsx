@@ -4,6 +4,8 @@ import { getPersonalizedSegments } from '@/lib/segments';
 import { FeedContent } from '@/components/FeedContent';
 import { DaVinciSketches } from '@/components/DaVinciSketches';
 import { sql } from '@/lib/db';
+import { getOnThisDaySegments } from '@/lib/onThisDay';
+import { getTopicStats } from '@/lib/topicStats';
 
 // Get time-based greeting
 function getGreeting(): string {
@@ -43,9 +45,11 @@ export default async function FeedPage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const [segments, preferences] = await Promise.all([
+  const [segments, preferences, onThisDayPeriods, topicStats] = await Promise.all([
     getPersonalizedSegments(session.userId),
-    getUserPreferences(session.userId)
+    getUserPreferences(session.userId),
+    getOnThisDaySegments(),
+    getTopicStats()
   ]);
 
   const greeting = getGreeting();
@@ -86,6 +90,8 @@ export default async function FeedPage() {
           greeting={greeting}
           roleLabel={roleLabel}
           importantCount={importantCount}
+          onThisDayPeriods={onThisDayPeriods}
+          topicStats={topicStats}
         />
       )}
 

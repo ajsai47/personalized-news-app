@@ -5,6 +5,8 @@ import { NewsEntry, getRelevance } from "@/components/NewsEntry"
 import { ScrollContainer } from "@/components/ScrollContainer"
 import { TopNav } from "@/components/TopNav"
 import { DaVinciSketches } from "@/components/DaVinciSketches"
+import { OnThisDaySidebar } from "@/components/OnThisDaySidebar"
+import { TopicTimelineSidebar, TopicTimelineSidebarEmpty } from "@/components/TopicTimelineSidebar"
 
 interface StructuredContent {
   news: string | null
@@ -33,6 +35,38 @@ interface UserPreferences {
   vibe?: string
 }
 
+interface OnThisDaySegment {
+  id: string
+  title: string
+  type: string
+  publishedAt: string
+  topics: string[]
+}
+
+interface OnThisDayPeriod {
+  label: string
+  date: Date
+  segments: OnThisDaySegment[]
+}
+
+interface TopicCount {
+  topic: string
+  count: number
+}
+
+interface TopicTimeline {
+  period: string
+  periodLabel: string
+  topics: TopicCount[]
+  total: number
+}
+
+interface TopicStatsResult {
+  topTopics: TopicCount[]
+  timeline: TopicTimeline[]
+  totalSegments: number
+}
+
 interface FeedContentProps {
   segments: Segment[]
   userPreferences?: UserPreferences | null
@@ -40,6 +74,8 @@ interface FeedContentProps {
   greeting: string
   roleLabel: string
   importantCount: number
+  onThisDayPeriods?: OnThisDayPeriod[]
+  topicStats?: TopicStatsResult | null
 }
 
 export function FeedContent({
@@ -48,7 +84,9 @@ export function FeedContent({
   dateStr,
   greeting,
   roleLabel,
-  importantCount
+  importantCount,
+  onThisDayPeriods = [],
+  topicStats
 }: FeedContentProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
@@ -125,57 +163,96 @@ export function FeedContent({
         onSearchChange={setSearchQuery}
       />
 
-      {/* Scroll Container with Content */}
+      {/* Main Layout with Sidebar */}
       <div className="relative z-10 px-4 py-8">
-        {filteredSegments.length === 0 ? (
-          <ScrollContainer>
-            <div className="text-center py-16">
-              <div className="text-5xl mb-6 opacity-40">🔍</div>
-              <h2 className="font-handwritten text-2xl mb-3" style={{ color: 'var(--ink)' }}>
-                No entries match thy criteria
-              </h2>
-              <p className="font-serif italic mb-6" style={{ color: 'var(--ink-light)' }}>
-                Perhaps broaden thy search, dear scholar
-              </p>
-              <button
-                onClick={() => {
-                  setSelectedTags([])
-                  setSelectedCompanies([])
-                  setRelevanceFilter('all')
-                  setTypeFilter('all')
-                  setSearchQuery('')
-                }}
-                className="stamp-button text-sm"
-              >
-                Clear all filters
-              </button>
-            </div>
-          </ScrollContainer>
-        ) : (
-          <ScrollContainer>
-            {/* Header inside scroll */}
-            <div className="text-center mb-8">
-              <h1 className="font-handwritten text-3xl mb-2" style={{ color: 'var(--ink)' }}>
-                Observations on Artificial Minds
-              </h1>
-              <p className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
-                {filteredSegments.length} {filteredSegments.length === 1 ? 'entry' : 'entries'} in this volume
-              </p>
-            </div>
+        <div className="feed-layout">
+          {/* On This Day Sidebar - Left */}
+          <OnThisDaySidebar periods={onThisDayPeriods} />
 
-            {/* All entries flow together */}
-            {filteredSegments.map((seg, i) => (
-              <NewsEntry key={seg.id} segment={seg} index={i} />
-            ))}
+          {/* Main Content */}
+          <div className="feed-main-content">
+            {filteredSegments.length === 0 ? (
+              <ScrollContainer>
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-6 opacity-40">?</div>
+                  <h2 className="font-handwritten text-2xl mb-3" style={{ color: 'var(--ink)' }}>
+                    No entries match thy criteria
+                  </h2>
+                  <p className="font-serif italic mb-6" style={{ color: 'var(--ink-light)' }}>
+                    Perhaps broaden thy search, dear scholar
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSelectedTags([])
+                      setSelectedCompanies([])
+                      setRelevanceFilter('all')
+                      setTypeFilter('all')
+                      setSearchQuery('')
+                    }}
+                    className="stamp-button text-sm"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              </ScrollContainer>
+            ) : (
+              <ScrollContainer>
+                {/* Search Results Header - Only show when searching */}
+                {searchQuery.trim() && (
+                  <div className="search-results-header">
+                    <span className="search-results-icon">?</span>
+                    <div className="search-results-text">
+                      Found <span className="search-results-count">{filteredSegments.length}</span>{' '}
+                      {filteredSegments.length === 1 ? 'result' : 'results'} for{' '}
+                      <span className="search-results-query">"{searchQuery}"</span>
+                    </div>
+                  </div>
+                )}
 
-            {/* Footer flourish */}
-            <div className="text-center mt-8 pt-4">
-              <p className="font-annotation text-sm italic" style={{ color: 'var(--ink-faded)' }}>
-                — Finis —
-              </p>
-            </div>
-          </ScrollContainer>
-        )}
+                {/* Header inside scroll - only show when not searching */}
+                {!searchQuery.trim() && (
+                  <div className="text-center mb-8">
+                    <h1 className="font-handwritten text-3xl mb-2" style={{ color: 'var(--ink)' }}>
+                      Observations on Artificial Minds
+                    </h1>
+                    <p className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
+                      {filteredSegments.length} {filteredSegments.length === 1 ? 'entry' : 'entries'} in this volume
+                    </p>
+                  </div>
+                )}
+
+                {/* All entries flow together */}
+                {filteredSegments.map((seg, i) => (
+                  <NewsEntry key={seg.id} segment={seg} index={i} searchQuery={searchQuery} />
+                ))}
+
+                {/* Footer flourish */}
+                <div className="text-center mt-8 pt-4">
+                  <p className="font-annotation text-sm italic" style={{ color: 'var(--ink-faded)' }}>
+                    - Finis -
+                  </p>
+                </div>
+              </ScrollContainer>
+            )}
+          </div>
+
+          {/* Topic Timeline Sidebar - Right */}
+          {topicStats ? (
+            <TopicTimelineSidebar
+              stats={topicStats}
+              selectedTopics={selectedTags}
+              onTopicClick={(topic) => {
+                setSelectedTags(prev =>
+                  prev.includes(topic)
+                    ? prev.filter(t => t !== topic)
+                    : [...prev, topic]
+                )
+              }}
+            />
+          ) : (
+            <TopicTimelineSidebarEmpty />
+          )}
+        </div>
       </div>
     </>
   )
