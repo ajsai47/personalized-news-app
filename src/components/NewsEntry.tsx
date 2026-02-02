@@ -55,26 +55,16 @@ function getOrdinal(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0]
 }
 
-// Clean HTML content for display
-function cleanForDisplay(text: string | null): string {
-  if (!text) return ''
-  return text
-    .replace(/<[^>]+>/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-}
-
 // Preserve links in HTML content
 function formatWithLinks(text: string | null): string {
   if (!text) return ''
-  // Keep anchor tags, remove other HTML
   return text
     .replace(/<(?!\/?a\b)[^>]+>/gi, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
-const typeLabels = {
+const typeLabels: Record<string, string> = {
   main_news: 'Chronicle',
   top_tools: 'Invention',
   quick_news: 'Dispatch'
@@ -84,7 +74,7 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
   const [isExpanded, setIsExpanded] = useState(false)
   const relevance = getRelevance(segment)
   const entryDate = formatEntryDate(segment.publishedAt)
-  const typeLabel = typeLabels[segment.type as keyof typeof typeLabels] || 'Entry'
+  const typeLabel = typeLabels[segment.type] || 'Entry'
   const hasStructured = segment.structuredContent && segment.structuredContent.news
 
   // Get content for display
@@ -100,70 +90,59 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
     ? formatWithLinks(segment.structuredContent!.whyItMatters)
     : null
 
-  // Importance class
-  const importanceClass = relevance === 'high' ? 'importance-high' : relevance === 'medium' ? 'importance-medium' : 'importance-low'
-
   return (
     <article
-      className={`news-entry ${importanceClass} ink-fade-in`}
+      className="entry-card ink-fade-in"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
-      {/* Date */}
-      <div className="font-typewriter text-xs mb-2" style={{ color: 'var(--ink-faded)' }}>
+      {/* Importance indicator */}
+      {relevance === 'high' && (
+        <div className="entry-importance-badge">Important</div>
+      )}
+
+      {/* Date - Small signature at top */}
+      <div className="entry-date">
         {entryDate}
       </div>
 
-      {/* Title with drop cap potential */}
-      <h2
-        className="font-handwritten text-2xl md:text-3xl mb-3 cursor-pointer hover:text-[var(--iron-gall)] transition-colors"
-        style={{ color: 'var(--ink)' }}
+      {/* Title - Largest element */}
+      <h1
+        className="entry-title cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {segment.title}
-      </h2>
+      </h1>
 
-      {/* Type badge */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="font-typewriter text-[10px] px-2 py-0.5 border border-[var(--gold)]" style={{ color: 'var(--gold-dark)' }}>
-          {typeLabel.toUpperCase()}
-        </span>
+      {/* Badges below title */}
+      <div className="entry-badges">
+        <span className="entry-badge entry-badge-type">{typeLabel}</span>
+        {segment.topics.slice(0, 3).map((topic) => (
+          <span key={topic} className="entry-badge entry-badge-topic">
+            {topic}
+          </span>
+        ))}
         {segment.personalizedContent && (
-          <span className="font-annotation text-xs" style={{ color: 'var(--gold-dark)' }}>
-            ✧ Inscribed for thee
+          <span className="entry-badge entry-badge-personalized">
+            ✧ For thee
           </span>
         )}
       </div>
 
-      {/* NEWS Section - Always visible */}
-      <div className="mb-4">
-        <div className="section-label">News</div>
+      {/* News Section - Always visible */}
+      <div className="entry-section">
         <p
-          className="font-serif text-base leading-relaxed drop-cap
+          className="entry-news drop-cap
             [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
             hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-          style={{ color: 'var(--ink-light)' }}
           dangerouslySetInnerHTML={{ __html: newsContent }}
         />
       </div>
 
-      {/* Topics */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {segment.topics.slice(0, 4).map((topic, i) => (
-          <span
-            key={topic}
-            className="tag-scrap"
-            style={{ transform: `rotate(${i % 2 === 0 ? -1 : 1}deg)` }}
-          >
-            {topic}
-          </span>
-        ))}
-      </div>
-
-      {/* Collapsed state - show expand button */}
+      {/* Collapsed state */}
       {!isExpanded && (detailsContent || whyItMattersContent) && (
         <button
           onClick={() => setIsExpanded(true)}
-          className="font-serif italic text-sm ink-link"
+          className="entry-expand-btn"
         >
           Read more...
         </button>
@@ -171,30 +150,28 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="mt-6 space-y-6 border-l-2 border-[var(--gold)]/30 pl-4 ml-2">
-          {/* DETAILS Section */}
+        <div className="entry-expanded">
+          {/* Details Section */}
           {detailsContent && (
-            <div>
-              <div className="section-label">Details</div>
+            <div className="entry-section">
+              <h2 className="entry-section-header">Details</h2>
               <div
-                className="font-serif text-base leading-relaxed whitespace-pre-line
+                className="entry-content
                   [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
                   hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-                style={{ color: 'var(--ink-light)' }}
                 dangerouslySetInnerHTML={{ __html: detailsContent }}
               />
             </div>
           )}
 
-          {/* WHY IT MATTERS Section */}
+          {/* Why It Matters Section */}
           {whyItMattersContent && (
-            <div className="p-4 rounded-sm" style={{ background: 'var(--parchment-light)', border: '1px solid var(--gold)', borderStyle: 'dashed' }}>
-              <div className="section-label" style={{ color: 'var(--vermillion)' }}>Why It Matters</div>
+            <div className="entry-section entry-section-matters">
+              <h2 className="entry-section-header entry-section-header-matters">Why It Matters</h2>
               <p
-                className="font-serif text-base leading-relaxed italic
+                className="entry-content entry-content-matters
                   [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:underline-offset-2
                   hover:[&_a]:text-[var(--iron-gall)] [&_a]:transition-colors"
-                style={{ color: 'var(--ink)' }}
                 dangerouslySetInnerHTML={{ __html: whyItMattersContent }}
               />
             </div>
@@ -203,21 +180,22 @@ export function NewsEntry({ segment, index }: { segment: Segment; index: number 
           {/* Collapse button */}
           <button
             onClick={() => setIsExpanded(false)}
-            className="font-serif italic text-sm ink-link flex items-center gap-2"
+            className="entry-collapse-btn"
           >
-            <span>↑</span>
-            Collapse
+            ↑ Collapse
           </button>
         </div>
       )}
 
-      {/* Flourish divider */}
-      <div className="flourish-divider" />
+      {/* Signature cursive divider */}
+      <div className="entry-signature-divider">
+        <span>~ AG+ ~</span>
+      </div>
     </article>
   )
 }
 
-// Keep SectionHeader for compatibility but simplified
+// Keep SectionHeader for compatibility
 export function SectionHeader({ title, icon, count }: { title: string; icon?: React.ReactNode; count?: number }) {
   return (
     <div className="flex items-center justify-between mb-6 mt-8 first:mt-0">
@@ -235,6 +213,3 @@ export function SectionHeader({ title, icon, count }: { title: string; icon?: Re
     </div>
   )
 }
-
-// Re-export getRelevance for use in FeedContent
-export { getRelevance as getSegmentRelevance }

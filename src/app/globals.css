@@ -939,3 +939,209 @@
   background: var(--ink-faded);
   border-radius: 50%;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ENTRY CARD - New card-based layout
+   ═══════════════════════════════════════════════════════════ */
+
+.entry-card {
+  position: relative;
+  background: var(--parchment-light);
+  border: 1px solid var(--ink-faded);
+  border-radius: 4px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow:
+    2px 3px 8px rgba(61, 41, 20, 0.1),
+    inset 0 0 20px rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.entry-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    3px 5px 12px rgba(61, 41, 20, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+/* Importance badge - top right corner */
+.entry-importance-badge {
+  position: absolute;
+  top: -8px;
+  right: 1rem;
+  background: var(--vermillion);
+  color: var(--parchment-light);
+  font-family: var(--font-typewriter), monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Date - Small signature style */
+.entry-date {
+  font-family: var(--font-annotation), cursive;
+  font-size: 0.8rem;
+  color: var(--ink-faded);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+/* Title - Largest element */
+.entry-title {
+  font-family: var(--font-handwritten), 'Brush Script MT', cursive;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.entry-title:hover {
+  color: var(--iron-gall);
+}
+
+@media (min-width: 768px) {
+  .entry-title {
+    font-size: 2rem;
+  }
+}
+
+/* Badges container */
+.entry-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Individual badges */
+.entry-badge {
+  font-family: var(--font-typewriter), monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+
+.entry-badge-type {
+  background: var(--gold);
+  color: var(--parchment-light);
+}
+
+.entry-badge-topic {
+  background: var(--parchment-dark);
+  color: var(--ink-light);
+  border: 1px solid var(--ink-faded);
+}
+
+.entry-badge-personalized {
+  background: transparent;
+  color: var(--gold-dark);
+  border: 1px dashed var(--gold);
+  font-family: var(--font-annotation), cursive;
+  font-style: italic;
+  text-transform: none;
+}
+
+/* News section content */
+.entry-section {
+  margin-bottom: 1rem;
+}
+
+.entry-news {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink-light);
+}
+
+/* Section headers - H2 style */
+.entry-section-header {
+  font-family: var(--font-handwritten), 'Brush Script MT', cursive;
+  font-size: 1.25rem;
+  color: var(--sepia);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--ink-faded);
+  display: inline-block;
+}
+
+.entry-section-header-matters {
+  color: var(--vermillion);
+  border-bottom-color: var(--vermillion);
+}
+
+/* Section content */
+.entry-content {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-light);
+  white-space: pre-line;
+}
+
+/* Why It Matters special styling */
+.entry-section-matters {
+  background: var(--parchment);
+  border: 1px dashed var(--vermillion);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.entry-content-matters {
+  font-style: italic;
+  color: var(--ink);
+}
+
+/* Expanded content area */
+.entry-expanded {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ink-faded);
+}
+
+/* Buttons */
+.entry-expand-btn,
+.entry-collapse-btn {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--iron-gall);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.entry-expand-btn:hover,
+.entry-collapse-btn:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.entry-collapse-btn {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Signature cursive divider */
+.entry-signature-divider {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.entry-signature-divider span {
+  font-family: var(--font-handwritten), 'Brush Script MT', cursive;
+  font-size: 1.1rem;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+}
