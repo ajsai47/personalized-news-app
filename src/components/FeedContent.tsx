@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { NewsEntry, getRelevance } from "@/components/NewsEntry"
 import { ScrollContainer } from "@/components/ScrollContainer"
 import { TopNav } from "@/components/TopNav"
 import { DaVinciSketches } from "@/components/DaVinciSketches"
 import { OnThisDaySidebar } from "@/components/OnThisDaySidebar"
 import { TopicTimelineSidebar, TopicTimelineSidebarEmpty } from "@/components/TopicTimelineSidebar"
+import { TimePeriod, DEFAULT_PERIOD } from "@/lib/timePeriods"
 
 interface StructuredContent {
   news: string | null
@@ -93,6 +94,7 @@ export function FeedContent({
   const [relevanceFilter, setRelevanceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(DEFAULT_PERIOD)
 
   // Get all unique tags from segments
   const allTags = useMemo(() => {
@@ -161,6 +163,8 @@ export function FeedContent({
         onTypeChange={setTypeFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
       />
 
       {/* Main Layout with Sidebar */}

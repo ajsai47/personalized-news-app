@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { TimePeriodSelector } from "./TimePeriodSelector"
+import { TimePeriod } from "@/lib/timePeriods"
 
 interface TopNavProps {
   dateStr: string
@@ -23,6 +25,9 @@ interface TopNavProps {
   // Search props
   searchQuery: string
   onSearchChange: (query: string) => void
+  // Time period props
+  selectedPeriod: TimePeriod
+  onPeriodChange: (period: TimePeriod) => void
 }
 
 // Dropdown component for filters
@@ -133,7 +138,9 @@ export function TopNav({
   typeFilter,
   onTypeChange,
   searchQuery,
-  onSearchChange
+  onSearchChange,
+  selectedPeriod,
+  onPeriodChange
 }: TopNavProps) {
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -230,6 +237,12 @@ export function TopNav({
           <p className="font-serif text-sm flex-shrink-0" style={{ color: 'var(--ink-light)' }}>
             {greeting}, {roleLabel} · <span className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>{dateStr}</span>
           </p>
+
+          {/* Time Period Selector */}
+          <TimePeriodSelector
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={onPeriodChange}
+          />
 
           {/* Filter Dropdowns */}
           <div className="flex items-center gap-2 flex-wrap justify-end">

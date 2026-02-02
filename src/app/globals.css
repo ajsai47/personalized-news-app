@@ -1844,3 +1844,133 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TIME PERIOD SELECTOR - Segmented button UI
+   ═══════════════════════════════════════════════════════════ */
+
+.time-period-selector {
+  display: inline-flex;
+  align-items: center;
+  background: var(--parchment-dark);
+  border: 1px solid var(--ink-faded);
+  border-radius: 4px;
+  padding: 3px;
+  gap: 2px;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(61, 41, 20, 0.1);
+}
+
+.time-period-btn {
+  font-family: var(--font-typewriter), monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-light);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.time-period-btn:hover {
+  color: var(--ink);
+  background: var(--parchment-light);
+}
+
+.time-period-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.time-period-btn-active {
+  color: var(--parchment-light);
+  background: linear-gradient(
+    to bottom,
+    var(--sepia) 0%,
+    var(--ink-light) 100%
+  );
+  border-color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.time-period-btn-active:hover {
+  color: var(--parchment-light);
+  background: linear-gradient(
+    to bottom,
+    var(--ink-light) 0%,
+    var(--ink) 100%
+  );
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .time-period-selector {
+    padding: 2px;
+    gap: 1px;
+  }
+
+  .time-period-btn {
+    font-size: 0.6rem;
+    padding: 0.3rem 0.45rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOPIC TREND CHART - Hand-drawn observation graph style
+   ═══════════════════════════════════════════════════════════ */
+
+.topic-trend-chart {
+  background: var(--parchment-light);
+  border: 1px solid var(--ink-faded);
+  border-radius: 4px;
+  padding: 0.75rem;
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.5),
+    1px 2px 4px rgba(61, 41, 20, 0.08);
+  position: relative;
+}
+
+/* Subtle grid lines like graph paper */
+.topic-trend-chart::before {
+  content: '';
+  position: absolute;
+  inset: 0.75rem;
+  background-image:
+    linear-gradient(
+      to bottom,
+      var(--ink-faded) 0px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to right,
+      var(--ink-faded) 0px,
+      transparent 1px
+    );
+  background-size: 100% 25%, 25% 100%;
+  opacity: 0.1;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+/* Recharts customizations */
+.topic-trend-chart .recharts-cartesian-axis-tick-value {
+  fill: var(--ink);
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.topic-trend-chart .recharts-legend-item-text {
+  color: var(--ink) !important;
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.topic-trend-chart .recharts-tooltip-cursor {
+  stroke: var(--ink-faded);
+  stroke-dasharray: 3 3;
+}
