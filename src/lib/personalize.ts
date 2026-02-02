@@ -38,13 +38,16 @@ export async function getPersonalizedContent(
     return cached[0].rewritten_content;
   }
 
-  // Generate personalized version
-  const response = await anthropic.messages.create({
-    model: 'claude-3-haiku-20240307',
-    max_tokens: 2000,
-    messages: [{
-      role: 'user',
-      content: `Rewrite this news segment for a specific reader. Keep all facts accurate - only change presentation style.
+  // Generate personalized version with graceful fallback
+  let rewritten = originalContent;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: `Rewrite this news segment for a specific reader. Keep all facts accurate - only change presentation style.
 
 Reader profile:
 - Role: ${preferences.role} in ${preferences.industry}
@@ -64,10 +67,15 @@ Original content (HTML):
 ${originalContent}
 
 Return the rewritten content as HTML only, no explanation:`
-    }]
-  });
+      }]
+    });
 
-  const rewritten = response.content[0].type === 'text' ? response.content[0].text : originalContent;
+    rewritten = response.content[0].type === 'text' ? response.content[0].text : originalContent;
+  } catch (error) {
+    // Rate limit or API error - return original content
+    console.error('Personalization failed, using original content:', error);
+    return originalContent;
+  }
 
   // Cache the result
   await sql`

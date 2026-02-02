@@ -1,81 +1,103 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
-import { getPersonalizedSegments, Segment } from '@/lib/segments';
+import { getPersonalizedSegments } from '@/lib/segments';
+import { FeedContent } from '@/components/FeedContent';
+import { DaVinciSketches } from '@/components/DaVinciSketches';
+import { sql } from '@/lib/db';
 
-function SegmentCard({ segment }: { segment: Segment }) {
-  const typeColors = {
-    main_news: 'bg-blue-100 text-blue-800',
-    top_tools: 'bg-green-100 text-green-800',
-    quick_news: 'bg-purple-100 text-purple-800'
-  };
+// Get time-based greeting
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morrow';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
-  const content = segment.personalizedContent || segment.originalContent;
+// Format date in formal style
+function formatDate(): string {
+  const date = new Date();
+  const day = date.getDate();
+  const ordinal = getOrdinal(day);
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+  return `${month} ${day}${ordinal}, ${year}`;
+}
 
-  return (
-    <article className="bg-white rounded-lg shadow-md p-6 mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`px-2 py-1 rounded text-xs font-medium ${typeColors[segment.type as keyof typeof typeColors] || 'bg-gray-100'}`}>
-          {segment.type.replace('_', ' ')}
-        </span>
-        {segment.topics.slice(0, 3).map(topic => (
-          <span key={topic} className="px-2 py-1 bg-gray-100 rounded text-xs">
-            {topic}
-          </span>
-        ))}
-        {segment.personalizedContent && (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-            personalized
-          </span>
-        )}
-      </div>
-      <h2 className="text-xl font-bold mb-3">{segment.title}</h2>
-      <div
-        className="prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
-    </article>
-  );
+function getOrdinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+// Get user preferences
+async function getUserPreferences(userId: string) {
+  const result = await sql`
+    SELECT role, industry, interests, tone, depth, vibe
+    FROM user_preferences
+    WHERE user_id = ${userId}
+  `;
+  return result[0] || null;
 }
 
 export default async function FeedPage() {
   const session = await getSession();
   if (!session) redirect('/login');
 
-  const segments = await getPersonalizedSegments(session.userId);
+  const [segments, preferences] = await Promise.all([
+    getPersonalizedSegments(session.userId),
+    getUserPreferences(session.userId)
+  ]);
 
-  const mainNews = segments.filter(s => s.type === 'main_news');
-  const topTools = segments.filter(s => s.type === 'top_tools');
-  const quickNews = segments.filter(s => s.type === 'quick_news');
+  const greeting = getGreeting();
+  const dateStr = formatDate();
+  const roleLabel = preferences?.role
+    ? preferences.role.charAt(0).toUpperCase() + preferences.role.slice(1)
+    : 'Scholar';
+
+  // Count high-relevance items
+  const importantCount = segments.filter(s => {
+    const title = s.title.toLowerCase();
+    return ['breaking', 'major', 'raises', 'billion', 'launch', 'announces'].some(k => title.includes(k));
+  }).length;
 
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Your AI News Feed</h1>
-          <a href="/settings" className="text-blue-600 hover:underline">Settings</a>
+    <main className="min-h-screen notebook-page">
+      {/* Feed Content with Filtering */}
+      {segments.length === 0 ? (
+        <>
+          <DaVinciSketches />
+          <div className="max-w-3xl mx-auto px-6 py-16">
+            <div className="text-center">
+              <div className="text-6xl mb-6 opacity-30">🪶</div>
+              <h2 className="font-handwritten text-3xl mb-4" style={{ color: 'var(--ink)' }}>
+                No observations yet
+              </h2>
+              <p className="font-serif italic" style={{ color: 'var(--ink-light)' }}>
+                The quill awaits. Check back soon for discoveries in the realm of artificial minds.
+              </p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <FeedContent
+          segments={segments}
+          userPreferences={preferences}
+          dateStr={dateStr}
+          greeting={greeting}
+          roleLabel={roleLabel}
+          importantCount={importantCount}
+        />
+      )}
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-[var(--ink-faded)]/20 mt-16">
+        <div className="max-w-3xl mx-auto px-6 py-8 text-center">
+          <div className="hand-drawn-divider mb-4" />
+          <p className="font-serif italic text-sm" style={{ color: 'var(--ink-faded)' }}>
+            Inscribed with the assistance of Claude, an artificial mind
+          </p>
         </div>
-
-        {segments.length === 0 ? (
-          <p className="text-gray-600">No news yet. Check back soon!</p>
-        ) : (
-          <>
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Main News</h2>
-              {mainNews.map(seg => <SegmentCard key={seg.id} segment={seg} />)}
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Top Tools</h2>
-              {topTools.map(seg => <SegmentCard key={seg.id} segment={seg} />)}
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">Quick News</h2>
-              {quickNews.map(seg => <SegmentCard key={seg.id} segment={seg} />)}
-            </section>
-          </>
-        )}
-      </div>
+      </footer>
     </main>
   );
 }
