@@ -62,7 +62,7 @@ export default async function FeedPage({ searchParams }: PageProps) {
   const period = parsePeriod(params.period);
 
   const [segments, preferences, onThisDayPeriods, topicStats] = await Promise.all([
-    getPersonalizedSegments(session.userId),
+    getPersonalizedSegments(session.userId, period),
     getUserPreferences(session.userId),
     getOnThisDaySegments(period),
     getTopicStats(period)

@@ -106,13 +106,6 @@ export function FeedContent({
     router.push(`/feed?period=${period}`)
   }
 
-  // Get all unique tags from segments
-  const allTags = useMemo(() => {
-    const tags = new Set<string>()
-    segments.forEach(seg => seg.topics.forEach(t => tags.add(t)))
-    return Array.from(tags).sort()
-  }, [segments])
-
   // Get all unique companies from segments, sorted by frequency
   const allCompanies = useMemo(() => {
     const companyCounts = new Map<string, number>()
@@ -161,9 +154,6 @@ export function FeedContent({
         greeting={greeting}
         storyCount={segments.length}
         importantCount={importantCount}
-        allTags={allTags}
-        selectedTags={selectedTags}
-        onTagsChange={setSelectedTags}
         allCompanies={allCompanies}
         selectedCompanies={selectedCompanies}
         onCompaniesChange={setSelectedCompanies}

@@ -1,5 +1,6 @@
 import { sql } from './db';
 import { getUserPreferences, getPersonalizedContent } from './personalize';
+import { getPeriodDays, TimePeriod } from './timePeriods';
 
 export interface StructuredContent {
   news: string | null;
@@ -19,12 +20,13 @@ export interface Segment {
   publishedAt: string;
 }
 
-export async function getTodaysSegments(): Promise<Segment[]> {
+export async function getTodaysSegments(period: TimePeriod = '1m'): Promise<Segment[]> {
+  const days = getPeriodDays(period);
   const result = await sql`
     SELECT s.id, s.type, s.title, s.original_content, s.structured_content, s.topics, s.companies, n.published_at
     FROM segments s
     JOIN newsletters n ON s.newsletter_id = n.id
-    WHERE n.published_at > NOW() - INTERVAL '7 days'
+    WHERE n.published_at > NOW() - INTERVAL '1 day' * ${days}
     ORDER BY n.published_at DESC, s.order_in_newsletter ASC
   `;
 
@@ -40,8 +42,8 @@ export async function getTodaysSegments(): Promise<Segment[]> {
   }));
 }
 
-export async function getPersonalizedSegments(userId: string): Promise<Segment[]> {
-  const segments = await getTodaysSegments();
+export async function getPersonalizedSegments(userId: string, period: TimePeriod = '1m'): Promise<Segment[]> {
+  const segments = await getTodaysSegments(period);
   const preferences = await getUserPreferences(userId);
 
   if (!preferences) {

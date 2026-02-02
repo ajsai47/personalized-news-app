@@ -12,9 +12,6 @@ interface TopNavProps {
   storyCount: number
   importantCount: number
   // Filter props
-  allTags: string[]
-  selectedTags: string[]
-  onTagsChange: (tags: string[]) => void
   allCompanies: string[]
   selectedCompanies: string[]
   onCompaniesChange: (companies: string[]) => void
@@ -127,9 +124,6 @@ export function TopNav({
   greeting,
   storyCount,
   importantCount,
-  allTags,
-  selectedTags,
-  onTagsChange,
   allCompanies,
   selectedCompanies,
   onCompaniesChange,
@@ -142,14 +136,6 @@ export function TopNav({
   selectedPeriod,
   onPeriodChange
 }: TopNavProps) {
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      onTagsChange(selectedTags.filter(t => t !== tag))
-    } else {
-      onTagsChange([...selectedTags, tag])
-    }
-  }
-
   const toggleCompany = (company: string) => {
     if (selectedCompanies.includes(company)) {
       onCompaniesChange(selectedCompanies.filter(c => c !== company))
@@ -172,10 +158,9 @@ export function TopNav({
     { value: 'low', label: 'Brief' }
   ]
 
-  const tagOptions = allTags.map(t => ({ value: t, label: t }))
   const companyOptions = allCompanies.map(c => ({ value: c, label: c }))
 
-  const hasActiveFilters = typeFilter !== 'all' || relevanceFilter !== 'all' || selectedTags.length > 0 || selectedCompanies.length > 0 || searchQuery.length > 0
+  const hasActiveFilters = typeFilter !== 'all' || relevanceFilter !== 'all' || selectedCompanies.length > 0 || searchQuery.length > 0
 
   return (
     <nav className="sticky top-0 z-50" style={{ background: 'var(--parchment)', borderBottom: '1px solid rgba(139, 115, 85, 0.3)' }}>
@@ -259,13 +244,6 @@ export function TopNav({
               onChange={(v) => onRelevanceChange(v as 'all' | 'high' | 'medium' | 'low')}
             />
             <FilterDropdown
-              label="Topics"
-              multiple
-              options={tagOptions}
-              selectedItems={selectedTags}
-              onToggleItem={toggleTag}
-            />
-            <FilterDropdown
               label="Companies"
               multiple
               options={companyOptions}
@@ -277,7 +255,6 @@ export function TopNav({
                 onClick={() => {
                   onTypeChange('all')
                   onRelevanceChange('all')
-                  onTagsChange([])
                   onCompaniesChange([])
                   onSearchChange('')
                 }}

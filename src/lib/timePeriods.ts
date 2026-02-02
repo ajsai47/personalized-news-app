@@ -2,7 +2,7 @@
  * Time period configuration for filtering and displaying news data
  */
 
-export const TIME_PERIODS = ['1d', '1w', '1m', '3m', '6m', '1yr'] as const;
+export const TIME_PERIODS = ['1d', '1w', '1m', '3m', '6m', '1yr', 'all'] as const;
 
 export type TimePeriod = (typeof TIME_PERIODS)[number];
 
@@ -25,6 +25,8 @@ export function getPeriodDays(period: string): number {
       return 180;
     case '1yr':
       return 365;
+    case 'all':
+      return 36500; // ~100 years - effectively all entries
     default:
       return 30;
   }
@@ -47,6 +49,8 @@ export function getPeriodLabel(period: string): string {
       return '6 Months';
     case '1yr':
       return '1 Year';
+    case 'all':
+      return 'All Time';
     default:
       return '1 Month';
   }
@@ -75,6 +79,8 @@ export function getChartBuckets(period: string): ChartBuckets {
       return { count: 6, unit: 'month' };
     case '1yr':
       return { count: 12, unit: 'month' };
+    case 'all':
+      return { count: 24, unit: 'month' }; // 2 years of monthly buckets
     default:
       return { count: 4, unit: 'week' };
   }
