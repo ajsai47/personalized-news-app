@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { NewsEntry, getRelevance } from "@/components/NewsEntry"
 import { ScrollContainer } from "@/components/ScrollContainer"
 import { TopNav } from "@/components/TopNav"
@@ -77,6 +78,7 @@ interface FeedContentProps {
   importantCount: number
   onThisDayPeriods?: OnThisDayPeriod[]
   topicStats?: TopicStatsResult | null
+  initialPeriod?: TimePeriod
 }
 
 export function FeedContent({
@@ -87,14 +89,22 @@ export function FeedContent({
   roleLabel,
   importantCount,
   onThisDayPeriods = [],
-  topicStats
+  topicStats,
+  initialPeriod = DEFAULT_PERIOD
 }: FeedContentProps) {
+  const router = useRouter()
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
   const [relevanceFilter, setRelevanceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(DEFAULT_PERIOD)
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(initialPeriod)
+
+  // Handle period change - update URL to trigger server re-fetch
+  const handlePeriodChange = (period: TimePeriod) => {
+    setSelectedPeriod(period)
+    router.push(`/feed?period=${period}`)
+  }
 
   // Get all unique tags from segments
   const allTags = useMemo(() => {
@@ -164,7 +174,7 @@ export function FeedContent({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         selectedPeriod={selectedPeriod}
-        onPeriodChange={setSelectedPeriod}
+        onPeriodChange={handlePeriodChange}
       />
 
       {/* Main Layout with Sidebar */}

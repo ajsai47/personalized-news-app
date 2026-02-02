@@ -4,8 +4,17 @@ import { getPersonalizedSegments } from '@/lib/segments';
 import { FeedContent } from '@/components/FeedContent';
 import { DaVinciSketches } from '@/components/DaVinciSketches';
 import { sql } from '@/lib/db';
-import { getOnThisDaySegments } from '@/lib/onThisDay';
+import { getOnThisDaySegments, TimePeriod } from '@/lib/onThisDay';
 import { getTopicStats } from '@/lib/topicStats';
+import { TIME_PERIODS, DEFAULT_PERIOD } from '@/lib/timePeriods';
+
+// Validate and parse period from URL
+function parsePeriod(period: string | undefined): TimePeriod {
+  if (period && TIME_PERIODS.includes(period as TimePeriod)) {
+    return period as TimePeriod;
+  }
+  return DEFAULT_PERIOD as TimePeriod;
+}
 
 // Get time-based greeting
 function getGreeting(): string {
@@ -41,15 +50,22 @@ async function getUserPreferences(userId: string) {
   return result[0] || null;
 }
 
-export default async function FeedPage() {
+interface PageProps {
+  searchParams: Promise<{ period?: string }>;
+}
+
+export default async function FeedPage({ searchParams }: PageProps) {
   const session = await getSession();
   if (!session) redirect('/login');
+
+  const params = await searchParams;
+  const period = parsePeriod(params.period);
 
   const [segments, preferences, onThisDayPeriods, topicStats] = await Promise.all([
     getPersonalizedSegments(session.userId),
     getUserPreferences(session.userId),
-    getOnThisDaySegments(),
-    getTopicStats()
+    getOnThisDaySegments(period),
+    getTopicStats(period)
   ]);
 
   const greeting = getGreeting();
@@ -92,6 +108,7 @@ export default async function FeedPage() {
           importantCount={importantCount}
           onThisDayPeriods={onThisDayPeriods}
           topicStats={topicStats}
+          initialPeriod={period}
         />
       )}
 
