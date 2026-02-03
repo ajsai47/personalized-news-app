@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { TimePeriodSelector } from "./TimePeriodSelector"
 import { TimePeriod } from "@/lib/timePeriods"
 
 interface TopNavProps {
@@ -162,30 +161,54 @@ export function TopNav({
 
   const hasActiveFilters = typeFilter !== 'all' || relevanceFilter !== 'all' || selectedCompanies.length > 0 || searchQuery.length > 0
 
+  const periodOptions = [
+    { value: '1d', label: '1 Day' },
+    { value: '1w', label: '1 Week' },
+    { value: '1m', label: '1 Month' },
+    { value: '3m', label: '3 Months' },
+    { value: '6m', label: '6 Months' },
+    { value: '1yr', label: '1 Year' },
+    { value: 'all', label: 'All Time' }
+  ]
+
   return (
     <nav className="sticky top-0 z-50" style={{ background: 'var(--parchment)', borderBottom: '1px solid rgba(139, 115, 85, 0.3)' }}>
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Top Row - Logo, Search, Settings */}
-        <div className="flex items-center gap-4 h-14">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Single Row - All controls on same plane */}
+        <div className="flex items-center h-14">
           {/* Logo */}
-          <Link href="/feed" className="flex items-center gap-2 flex-shrink-0">
-            <span className="font-handwritten text-2xl" style={{ color: 'var(--ink)' }}>
+          <Link href="/feed" className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="font-handwritten text-xl" style={{ color: 'var(--ink)' }}>
               AG+
-            </span>
-            <span className="hidden sm:block text-xs font-typewriter" style={{ color: 'var(--ink-faded)' }}>
-              Notebook
             </span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md">
-            <div className="relative">
+          {/* Left Filters - Time & Company */}
+          <div className="flex items-center gap-1.5 ml-4">
+            <FilterDropdown
+              label="Period"
+              value={selectedPeriod}
+              options={periodOptions}
+              onChange={(v) => onPeriodChange(v as TimePeriod)}
+            />
+            <FilterDropdown
+              label="Companies"
+              multiple
+              options={companyOptions}
+              selectedItems={selectedCompanies}
+              onToggleItem={toggleCompany}
+            />
+          </div>
+
+          {/* Search Bar - Center */}
+          <div className="flex-1 flex justify-center px-4">
+            <div className="relative w-full max-w-sm">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Search entries..."
-                className="w-full px-4 py-2 text-sm font-serif border border-[var(--ink-faded)] bg-transparent focus:outline-none focus:border-[var(--sepia)] transition-colors"
+                className="w-full px-4 py-1.5 text-sm font-serif border border-[var(--ink-faded)] bg-transparent focus:outline-none focus:border-[var(--sepia)] transition-colors"
                 style={{ color: 'var(--ink)', background: 'var(--parchment-light)' }}
               />
               {searchQuery && (
@@ -200,37 +223,8 @@ export function TopNav({
             </div>
           </div>
 
-          {/* Stats & Settings */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="hidden md:flex items-center gap-3 font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
-              <span>{storyCount} entries</span>
-              <span style={{ color: 'var(--vermillion)' }}>✦ {importantCount}</span>
-            </div>
-            <Link
-              href="/settings"
-              className="p-2 text-sm border border-[var(--ink-faded)] hover:border-[var(--ink)] transition-colors"
-              style={{ color: 'var(--ink-faded)' }}
-            >
-              ☰
-            </Link>
-          </div>
-        </div>
-
-        {/* Bottom Row - Greeting and Filters */}
-        <div className="flex items-center justify-between gap-4 pb-3">
-          {/* Greeting */}
-          <p className="font-serif text-sm flex-shrink-0" style={{ color: 'var(--ink-light)' }}>
-            {greeting}, {roleLabel} · <span className="font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>{dateStr}</span>
-          </p>
-
-          {/* Time Period Selector */}
-          <TimePeriodSelector
-            selectedPeriod={selectedPeriod}
-            onPeriodChange={onPeriodChange}
-          />
-
-          {/* Filter Dropdowns */}
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          {/* Right Filters - Type & Importance */}
+          <div className="flex items-center gap-1.5 mr-4">
             <FilterDropdown
               label="Type"
               value={typeFilter}
@@ -242,13 +236,6 @@ export function TopNav({
               value={relevanceFilter}
               options={relevanceOptions}
               onChange={(v) => onRelevanceChange(v as 'all' | 'high' | 'medium' | 'low')}
-            />
-            <FilterDropdown
-              label="Companies"
-              multiple
-              options={companyOptions}
-              selectedItems={selectedCompanies}
-              onToggleItem={toggleCompany}
             />
             {hasActiveFilters && (
               <button
@@ -264,6 +251,20 @@ export function TopNav({
                 Clear
               </button>
             )}
+          </div>
+
+          {/* Entry count & Settings */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="hidden lg:block font-typewriter text-xs" style={{ color: 'var(--ink-faded)' }}>
+              {storyCount}
+            </span>
+            <Link
+              href="/settings"
+              className="p-1.5 text-sm border border-[var(--ink-faded)] hover:border-[var(--ink)] transition-colors"
+              style={{ color: 'var(--ink-faded)' }}
+            >
+              ☰
+            </Link>
           </div>
         </div>
       </div>
